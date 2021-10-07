@@ -39,15 +39,14 @@ export class IngressosService {
     
     try {
 
-      const ingressoData = {
-        preco: ingresso.preco,
-        filme: ingresso.filme.titulo,
-        user: ingresso.user.nome,
-        sala: ingresso.sala.nome,
-        horario: ingresso.filme.horario
-      };
-
-      return ingressoData;
+      // const ingressoData = {
+      //   preco: ingresso.preco,
+      //   filme: ingresso.filme,
+      //   user: ingresso.user,
+      //   sala: ingresso.sala,
+      //   horario: ingresso.filme
+      // };
+      return ingresso;
     } catch (error) {
 
       throw new InternalServerErrorException(
@@ -87,11 +86,17 @@ export class IngressosService {
   }
 
   async finalizar (ingresso: IngressoDTO, ingressoId: number) {
-    await this.getInfoIngresso(ingressoId);
+    const ingressoEntity = await this.getInfoIngresso(ingressoId);
 
     const {
-      salaEntity,
+      salaEntity
     } = await this.getDataIngresso(ingresso);
+
+    if (ingresso.user.email !== ingressoEntity.user.email) {
+      throw new NotFoundException({
+        message: 'Ingresso não encontrado'
+      });
+    }
 
     const totalIngressosBySalaId = await this.ingressoRepository.count({
       where: {

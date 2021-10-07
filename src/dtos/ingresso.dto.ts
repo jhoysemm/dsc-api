@@ -1,4 +1,5 @@
 import { IsNotEmpty, IsNumber } from "class-validator";
+import { User } from "src/domain/entities/users.entity";
 
 export class IngressoDTO {
 
@@ -18,5 +19,5 @@ export class IngressoDTO {
   })
   filme: number
 
-  user: number
+  user: User
 }

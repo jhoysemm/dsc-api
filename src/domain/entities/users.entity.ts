@@ -44,9 +44,6 @@ export class User extends BaseEntity {
   @Column({ nullable: false, type: 'varchar', length: 200 })
   nome: string;
 
-  // @Column({ nullable: false, type: 'enum', enum: ['GERENTE', 'CLIENTE'], default: 'CLIENTE' })
-  // role: string;
-
   @Column({ nullable: false, type: 'varchar', default: 'CLIENTE' })
   role: string;
 
