@@ -39,13 +39,7 @@ export class IngressosService {
     
     try {
 
-      // const ingressoData = {
-      //   preco: ingresso.preco,
-      //   filme: ingresso.filme,
-      //   user: ingresso.user,
-      //   sala: ingresso.sala,
-      //   horario: ingresso.filme
-      // };
+
       return ingresso;
     } catch (error) {
 
