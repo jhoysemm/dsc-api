@@ -36,4 +36,19 @@ export class IngressosController {
 
     return ingresso;
   }
+
+  @Role('CLIENTE')
+  @UseGuards(AuthGuard(), RolesGuard)
+  @Post('comprar/:ingressoId/finalizar')
+  async finalizar (
+    @Body(ValidationPipe) ingressoDto: IngressoDTO,
+    @Param('ingressoId') ingressoId: number,
+    @Req() req
+  ) {
+
+    ingressoDto.user = req.user;
+    const ingresso = await this.ingressosService.finalizar(ingressoDto, ingressoId);
+
+    return ingresso;
+  }
 }

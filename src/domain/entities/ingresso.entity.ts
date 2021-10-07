@@ -25,6 +25,9 @@ export class Ingresso extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @Column({nullable: true})
+  finishedAt: Date;
+
   @IsNotEmpty({
     message: 'O campo sala é obrigatório',
   })

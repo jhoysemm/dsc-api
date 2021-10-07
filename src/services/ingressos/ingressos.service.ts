@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Ingresso } from 'src/domain/entities/ingresso.entity';
 import { FilmeRepository } from 'src/domain/repositories/FilmeRepository.repository';
@@ -6,6 +6,7 @@ import { IngressoRepository } from 'src/domain/repositories/IngressoRepository.r
 import { SalasRepository } from 'src/domain/repositories/SalasRepository.repository';
 import { UserRepository } from 'src/domain/repositories/UserRepository.repository';
 import { IngressoDTO } from 'src/dtos/ingresso.dto';
+import { IsNull, Not } from 'typeorm';
 
 @Injectable()
 export class IngressosService {
@@ -57,6 +58,66 @@ export class IngressosService {
 
   async comprar (ingresso: IngressoDTO) {
 
+    const {
+      userEntity,
+      salaEntity,
+      filmeEntity
+    } = await this.getDataIngresso(ingresso);
+
+    const {
+      preco
+    } = ingresso;
+
+    const ingressoRepository = this.ingressoRepository.create({
+      user: userEntity,
+      sala: salaEntity,
+      filme: filmeEntity,
+      preco
+    });
+
+    try {
+      await ingressoRepository.save();
+
+      return ingresso;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Erro ao comprar um ingresso',
+      );
+    }
+  }
+
+  async finalizar (ingresso: IngressoDTO, ingressoId: number) {
+    await this.getInfoIngresso(ingressoId);
+
+    const {
+      salaEntity,
+    } = await this.getDataIngresso(ingresso);
+
+    const totalIngressosBySalaId = await this.ingressoRepository.count({
+      where: {
+        sala: ingresso.sala,
+        finishedAt: Not(IsNull())
+      }
+    });
+        
+    if (totalIngressosBySalaId < salaEntity.limiteCadeiras) {
+      this.ingressoRepository.update({
+        id: ingressoId
+      }, {
+        finishedAt: new Date()
+      });
+
+      return {
+        message: 'Compra do ingresso finalizada com sucesso'
+      }
+    }
+
+    throw new ConflictException({
+      message: 'O limite de espaço foi atingindo'
+    });
+  }
+
+  async getDataIngresso (ingresso: IngressoDTO) {
     const userEntity = await this.userRepository.findOne(ingresso.user);
     const filmeEntity = await this.filmeRepository.findOne(ingresso.filme);
     const salaEntity = await this.salaRepository.findOne(ingresso.sala);
@@ -73,24 +134,10 @@ export class IngressosService {
       throw new NotFoundException('Sala não encontrada');
     }
 
-    const {
-      preco
-    } = ingresso
-    const ingressoRepository = this.ingressoRepository.create({
-      user: userEntity,
-      sala: salaEntity,
-      filme: filmeEntity,
-      preco
-    });
-
-    try {
-      await ingressoRepository.save();
-
-      return ingresso;
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Erro ao comprar um ingresso',
-      );
+    return {
+      userEntity,
+      filmeEntity,
+      salaEntity
     }
   }
 }
